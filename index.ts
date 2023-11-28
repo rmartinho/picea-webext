@@ -64,7 +64,7 @@ function markAll() {
     icon.parentElement?.appendChild(button)
     icon.parentElement?.removeChild(icon)
   })
-  document.querySelector('.nav-button')?.appendChild(button)
+  document.querySelector('.content-section h1')?.appendChild(button)
 }
 
 function timeout(ms: number): Promise<void> {
