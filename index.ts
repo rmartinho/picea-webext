@@ -61,7 +61,7 @@ function markAll() {
         } catch (e) {
           icon.parentElement?.appendChild(makeIcon('error'))
           icon.parentElement?.removeChild(icon)
-          return
+          throw e
         }
         await timeout(1000)
       }
