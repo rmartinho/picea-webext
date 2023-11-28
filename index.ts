@@ -206,6 +206,7 @@ async function downloadStory(issue: Issue, story: Story): Promise<string> {
     const response = await fetch(new URL(story.url, document.location.href))
     const html = await response.text()
     const doc = new DOMParser().parseFromString(html, 'text/html')
+    const award = doc.querySelector('p.award')
     const body = doc.querySelector('.story-text')
     if (!body) throw new Error('missing story body')
     const aboutStart = body.querySelector('.about')
@@ -239,7 +240,7 @@ async function downloadStory(issue: Issue, story: Story): Promise<string> {
         el.style.textAlign = value
       } catch {}
     })
-    story.text = body.innerHTML
+    story.text = (award?.outerHTML ?? '') + body.innerHTML
   }
   icon.parentElement?.appendChild(makeIcon('get-story'))
   icon.parentElement?.removeChild(icon)
