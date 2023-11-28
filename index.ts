@@ -111,7 +111,7 @@ function parseIssue(element: HTMLElement): Issue | undefined {
 
 function parseSection(el: HTMLElement): Section | undefined {
   const titleCaps = el.querySelector('.section')?.textContent
-  if (!titleCaps || titleCaps == 'COVER ART') return
+  if (!titleCaps) return
   const title = titleCase(titleCaps)
 
   const tables = el.querySelectorAll<HTMLElement>('.index-col1, .index-col2')
