@@ -29,16 +29,21 @@ markAll()
 function makeIcon(name: string): HTMLImageElement {
   const icon = document.createElement('img')
   icon.className = `clarkesreader-icon-${name}`
-  icon.width = 32
-  icon.height = 32
+  icon.width = 20
+  icon.height = 20
   icon.src = chrome.runtime.getURL(`resources/${name}.svg`)
+  icon.style.verticalAlign = 'middle'
   return icon
 }
 
 function makeButton(iconName: string): HTMLButtonElement {
   const button = document.createElement('button')
-  button.appendChild(makeIcon(iconName))
+  const icon = makeIcon(iconName)
+  icon.style.removeProperty('vertical-align')
+  button.appendChild(icon)
   button.style.all = 'unset'
+  button.style.maxWidth = button.style.maxHeight = '32px'
+  button.style.verticalAlign = 'middle'
   return button
 }
 
@@ -201,7 +206,9 @@ async function downloadImage(url: string): Promise<Blob> {
 }
 
 async function downloadStory(issue: Issue, story: Story): Promise<string> {
-  const icon = story.element.appendChild(makeIcon('getting'))
+  const icon = story.element
+    .querySelector('.story')
+    ?.appendChild(makeIcon('getting'))
   {
     const response = await fetch(new URL(story.url, document.location.href))
     const html = await response.text()
@@ -242,8 +249,8 @@ async function downloadStory(issue: Issue, story: Story): Promise<string> {
     })
     story.text = (award?.outerHTML ?? '') + body.innerHTML
   }
-  icon.parentElement?.appendChild(makeIcon('get-story'))
-  icon.parentElement?.removeChild(icon)
+  icon?.parentElement?.appendChild(makeIcon('get-story'))
+  icon?.parentElement?.removeChild(icon)
 
   return story.text
 }
