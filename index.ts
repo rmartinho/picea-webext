@@ -26,19 +26,19 @@ type Story = {
 
 markAll()
 
-function makeIcon(name: string): HTMLImageElement {
+function makeIcon(name: string, title: string): HTMLImageElement {
   const icon = document.createElement('img')
   icon.className = `clarkesreader-icon-${name}`
-  icon.width = 20
-  icon.height = 20
+  icon.width = icon.height = 20
+  icon.title = title
   icon.src = chrome.runtime.getURL(`resources/${name}.svg`)
   icon.style.verticalAlign = 'middle'
   return icon
 }
 
-function makeButton(iconName: string): HTMLButtonElement {
+function makeButton(iconName: string, title: string): HTMLButtonElement {
   const button = document.createElement('button')
-  const icon = makeIcon(iconName)
+  const icon = makeIcon(iconName, title)
   icon.style.removeProperty('vertical-align')
   button.appendChild(icon)
   button.style.all = 'unset'
@@ -49,17 +49,17 @@ function makeButton(iconName: string): HTMLButtonElement {
 
 function markAll() {
   const issues = parsePage(document)
-  const button = makeButton('get-all')
+  const button = makeButton('get-all', 'Download all EPUBs')
   button.addEventListener('click', async e => {
     if (!button.parentElement) return
-    const icon = button.parentElement.appendChild(makeIcon('getting'))
+    const icon = button.parentElement.appendChild(makeIcon('getting', 'Downloading EPUBs'))
     button.parentElement.removeChild(button)
     {
       for (const issue of issues) {
         try {
           await downloadIssue(issue)
         } catch (e) {
-          icon.parentElement?.appendChild(makeIcon('error'))
+          icon.parentElement?.appendChild(makeIcon('error', 'Failed downloading EPUBs'))
           icon.parentElement?.removeChild(icon)
           throw e
         }
@@ -155,7 +155,7 @@ function parseStory(element: HTMLElement): Story | undefined {
 function markIssue(el: Element, issue: Issue) {
   const issueEl = el.querySelector('.issue')
 
-  const button = makeButton('get-epub')
+  const button = makeButton('get-epub', 'Download EPUB')
   button.addEventListener('click', e => downloadIssue(issue))
   issueEl?.appendChild(button)
 }
@@ -165,7 +165,7 @@ async function downloadIssue(issue: Issue) {
     '.clarkesreader-icon-get-epub'
   )?.parentElement
   if (!button) return
-  const icon = button.parentElement?.appendChild(makeIcon('getting'))
+  const icon = button.parentElement?.appendChild(makeIcon('getting', 'Downloading EPUB'))
   button.parentElement?.removeChild(button)
   {
     try {
@@ -178,7 +178,7 @@ async function downloadIssue(issue: Issue) {
       }
       await makeEpub(issue)
     } catch (e) {
-      icon?.parentElement?.appendChild(makeIcon('error'))
+      icon?.parentElement?.appendChild(makeIcon('error', 'Failed downloading EPUB'))
       icon?.parentElement?.removeChild(icon)
       throw e
     }
@@ -208,7 +208,7 @@ async function downloadImage(url: string): Promise<Blob> {
 async function downloadStory(issue: Issue, story: Story): Promise<string> {
   const icon = story.element
     .querySelector('.story')
-    ?.appendChild(makeIcon('getting'))
+    ?.appendChild(makeIcon('getting', 'Downloading story'))
   {
     const response = await fetch(new URL(story.url, document.location.href))
     const html = await response.text()
@@ -249,7 +249,7 @@ async function downloadStory(issue: Issue, story: Story): Promise<string> {
     })
     story.text = (award?.outerHTML ?? '') + body.innerHTML
   }
-  icon?.parentElement?.appendChild(makeIcon('get-story'))
+  icon?.parentElement?.appendChild(makeIcon('get-story', 'Downloaded story'))
   icon?.parentElement?.removeChild(icon)
 
   return story.text
