@@ -54,8 +54,9 @@ function markAll() {
         try {
           await downloadIssue(issue)
         } catch (e) {
-          console.log(`error downloading issue #${issue.number}`, e)
-          break
+          icon.parentElement?.appendChild(makeIcon('error'))
+          icon.parentElement?.removeChild(icon)
+          return
         }
         await timeout(1000)
       }
@@ -150,14 +151,7 @@ function markIssue(el: Element, issue: Issue) {
   const issueEl = el.querySelector('.issue')
 
   const button = makeButton('get-epub')
-  button.addEventListener('click', async e => {
-    try {
-      await downloadIssue(issue)
-    } catch (e) {
-      console.log(`error downloading issue #${issue.number}`, e)
-      return
-    }
-  })
+  button.addEventListener('click', e => downloadIssue(issue))
   issueEl?.appendChild(button)
 }
 
@@ -169,14 +163,20 @@ async function downloadIssue(issue: Issue) {
   const icon = button.parentElement?.appendChild(makeIcon('getting'))
   button.parentElement?.removeChild(button)
   {
-    await downloadCover(issue)
-    for (const section of issue.sections) {
-      for (const story of section.stories) {
-        await downloadStory(issue, story)
-        await timeout(100)
+    try {
+      await downloadCover(issue)
+      for (const section of issue.sections) {
+        for (const story of section.stories) {
+          await downloadStory(issue, story)
+          await timeout(100)
+        }
       }
+      await makeEpub(issue)
+    } catch (e) {
+      icon?.parentElement?.appendChild(makeIcon('error'))
+      icon?.parentElement?.removeChild(icon)
+      throw e
     }
-    await makeEpub(issue)
   }
   icon?.parentElement?.appendChild(button)
   icon?.parentElement?.removeChild(icon)

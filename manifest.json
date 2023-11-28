@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Clarkesreader",
-  "version": "1.0.4",
+  "version": "1.0.5",
 
   "description": "Downloads issues of Clarkesworld as epub files",
 
