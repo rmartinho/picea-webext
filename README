@@ -1,0 +1,18 @@
+How to build:
+
+1. Make sure yarn is installed. You can find installation instructions at https://classic.yarnpkg.com/lang/en/docs/install/.
+   This was tested with yarn version 1.22.19.
+
+2. Enter the source code folder
+
+    $ cd path/to/source
+
+3. Install dependencies:
+
+    $ yarn install
+
+4. Run the build script
+
+    $ yarn build
+
+This creates a file named index.js in the dist/ folder; that is the content script packaged in the extension.

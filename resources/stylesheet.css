@@ -1,0 +1,808 @@
+/*
+ * Stylesheet from clarkesworldmagazine.com, modified for use in epub
+ */
+
+html {
+  line-height: 1.15;
+}
+
+body {
+  margin: 0em 0em 0em 0em;
+}
+
+main {
+  display: block;
+}
+
+h1 {
+  font-size: 2em;
+  margin: 0.67em 0;
+}
+
+hr {
+  box-sizing: content-box;
+  height: 0;
+  overflow: visible;
+}
+
+pre {
+  font-family: monospace;
+  font-size: 1em;
+}
+
+a {
+  background-color: transparent;
+}
+
+abbr[title] {
+  border-bottom: none;
+  text-decoration: underline;
+  text-decoration: underline dotted;
+}
+
+b,
+strong {
+  font-weight: bolder;
+}
+
+kbd,
+samp {
+  font-family: monospace;
+  font-size: 1em;
+}
+
+small {
+  font-size: 80%;
+}
+
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+img {
+  border-style: none;
+}
+
+legend {
+  box-sizing: border-box;
+  color: inherit;
+  display: table;
+  max-width: 100%;
+  padding: 0;
+  white-space: normal;
+}
+
+[hidden] {
+  display: none;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+html {
+  box-sizing: border-box;
+}
+
+body {
+  color: #000000;
+  font-family: 'Roboto', Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue',
+    sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  clear: both;
+}
+
+p {
+  margin-bottom: 1.5em;
+}
+
+dfn,
+cite,
+em,
+i {
+  font-style: italic;
+}
+
+blockquote {
+  margin: 0 1.5em;
+}
+
+address {
+  margin: 0 0 1.5em;
+}
+
+pre {
+  background: #eee;
+  font-family: 'Courier 10 Pitch', courier, monospace;
+  line-height: 1.6;
+  margin-bottom: 1.6em;
+  max-width: 100%;
+  overflow: auto;
+  padding: 1.6em;
+}
+
+kbd,
+tt,
+var {
+  font-family: monaco, consolas, 'Andale Mono', 'DejaVu Sans Mono', monospace;
+}
+code {
+  font-size: 0.9em;
+  font-family: consolas, courier, monospace;
+}
+abbr,
+acronym {
+  border-bottom: 1px dotted #666;
+  cursor: help;
+}
+
+mark,
+ins {
+  background: #fff9c0;
+  text-decoration: none;
+}
+
+big {
+  font-size: 125%;
+}
+
+body {
+  background: #fff;
+}
+
+p:empty::before {
+  content: initial !important;
+}
+
+ul,
+ol {
+  margin: 0 0 1.5em 3em;
+}
+
+ul {
+  list-style: disc;
+}
+
+ol {
+  list-style: decimal;
+}
+
+li > ul,
+li > ol {
+  margin-bottom: 0;
+  margin-left: 1.5em;
+}
+
+dt {
+  font-weight: 700;
+}
+
+dd {
+  margin: 0 1.5em 1.5em;
+}
+
+img {
+  height: auto;
+  max-width: 100%;
+}
+
+figure {
+  margin: 1em 0;
+}
+
+table {
+  margin: 0 0 1.5em;
+  width: 100%;
+}
+
+hr {
+  display: block;
+  border: 0px;
+  height: 15px;
+  width: 38px;
+  background-image: url('sep.png');
+  padding: 0;
+  margin: 0 auto;
+}
+
+hr.normal {
+  border: 0;
+  border-top: 1px solid #555;
+  margin: 1.5em 0em 1.5em 0em;
+  height: 1px;
+  width: 100%;
+}
+.form-control {
+  margin-bottom: 1em;
+  width: 100%;
+}
+
+a {
+  color: #4169e1;
+}
+
+a:visited {
+  color: #800080;
+}
+
+a:hover,
+a:focus,
+a:active {
+  color: #191970;
+}
+
+a:focus {
+  outline: thin dotted;
+}
+
+a:hover,
+a:active {
+  outline: 0;
+}
+
+span.byl {
+  text-transform: uppercase;
+  font-size: 0.8em;
+}
+
+p.cover-image {
+  margin: 0em;
+  padding: 0em;
+}
+p.line-above {
+  margin-top: 1em;
+}
+p.line-above15 {
+  margin-top: 1.5em;
+}
+p.line-above2 {
+  margin-top: 2em;
+}
+p.half-line-above {
+  margin-top: 0.5em;
+}
+img.boxed {
+  border: 1px black solid;
+  padding: 2px;
+}
+div.clear {
+  clear: both;
+}
+span.authorname {
+  text-transform: uppercase;
+}
+span.smaller2 {
+  font-size: 0.8em;
+}
+span.smaller {
+  font-size: 0.9em;
+}
+div.bodyframe {
+  margin: 1em 0 0 0;
+  padding-top: 10px;
+  text-align: center;
+}
+
+div.page-frame {
+  margin: auto;
+  display: inline-block;
+  text-align: left;
+  display: flex;
+  max-width: 1100px;
+}
+div.content-section {
+  float: left;
+  box-sizing: content-box;
+  max-width: 600px;
+  min-width: 500px;
+  width: 90%;
+  margin: 0 auto;
+  padding: 0 1em 0 1em;
+  line-height: 1.4em;
+  font-size: 1em; /* changed from 0.9 */
+  font-family: 'Roboto', sans-serif;
+}
+
+div.content-section h3 {
+  letter-spacing: 0.05em;
+  font-size: 1.3em;
+  margin-top: 1.3em;
+  margin-bottom: 0.5em;
+  text-transform: uppercase;
+  font-family: 'Passion One', sans-serif;
+  font-weight: normal;
+  line-height: 1em;
+  color: #2d271f;
+  border-bottom: 1px #999999 solid;
+  width: 100%;
+}
+
+div.content-section h3.about {
+  margin-top: 2.6em;
+}
+
+div.content-section h2 {
+  letter-spacing: 0.05em;
+  font-size: 1.7em;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  text-transform: uppercase;
+  font-family: 'Passion One', sans-serif;
+  font-weight: normal;
+  line-height: 1em;
+  color: #2d271f;
+  border-bottom: 1px #999999 solid;
+  width: 100%;
+}
+div.content-section h1,
+div.page-frame h1 {
+  letter-spacing: 0em;
+  font-size: 2.1em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  text-transform: uppercase;
+  font-family: 'Passion One', sans-serif;
+  font-weight: normal;
+  line-height: 1em;
+  text-align: center;
+  color: #2d271f;
+}
+div.content-section p {
+  margin-bottom: 1.3em;
+  overflow-wrap: break-word;
+}
+div.content-section ul,
+div.content-section ol {
+  margin-left: 0em;
+}
+div.content-section a,
+div.content-section a:visited {
+  text-decoration: none;
+  color: #2477a3;
+}
+div.content-section a:hover {
+  text-decoration: underline;
+}
+
+div.content-section h1.story-title {
+  letter-spacing: 0em;
+  font-size: 2.1em;
+  margin-top: 0em;
+  margin-bottom: 0em;
+  text-transform: uppercase;
+  font-family: 'Passion One', sans-serif;
+  font-weight: normal;
+  line-height: 1em;
+  text-align: center;
+  color: #203647;
+}
+.balance-text {
+  text-wrap: balance;
+}
+div.content-section p.story-author {
+  margin-top: 0.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: 'Oswald', 'Passion One', Georgia, 'Times New Roman', Times, serif;
+  color: #5e7a8a;
+  margin-bottom: 0em;
+  line-height: 1.2em;
+  text-align: center;
+}
+div.content-section p.story-description {
+  margin-top: 1.4em;
+  font-size: 0.8em;
+  font-weight: 500;
+  font-family: 'Oswald', 'Passion One', Georgia, 'Times New Roman', Times, serif;
+  margin-bottom: 0.5em;
+  line-height: 1.2em;
+  text-align: center;
+  color: #5e7a8a;
+  text-transform: uppercase;
+}
+div.content-section p.issue-heading {
+  margin-top: 0.3em;
+  font-size: 0.8em;
+  font-weight: 500;
+  font-family: 'Oswald', 'Passion One', Georgia, 'Times New Roman', Times, serif;
+  margin-bottom: 0em;
+  line-height: 1.2em;
+  text-align: center;
+  text-transform: uppercase;
+}
+div.content-section p.issue-heading a,
+div.content-section p.issue-heading a:visited,
+div.content-section p.audio-text a,
+div.content-section p.audio-text a:visited {
+  color: #2477a3;
+  text-decoration: none;
+}
+div.content-section p.issue-heading a:hover,
+div.content-section p.audio-text a:hover {
+  text-decoration: underline;
+}
+div.content-section p.audio-text {
+  margin-top: 1em;
+  font-size: 0.7em;
+  font-weight: 500;
+  font-family: 'Oswald', 'Passion One', Georgia, 'Times New Roman', Times, serif;
+  margin-bottom: 0em;
+  line-height: 1.2em;
+  text-align: center;
+}
+
+div.content-section p.award {
+  margin-top: 1em;
+  font-size: 0.8em;
+  font-weight: 500;
+  font-family: 'Oswald', 'Passion One', Georgia, 'Times New Roman', Times, serif;
+  margin-bottom: 0em;
+  line-height: 1.5em;
+  text-align: center;
+  text-transform: uppercase;
+  color: #203647;
+  background-color: #eeeeee;
+}
+div.content-section div.story-text {
+  margin-top: 2.5em;
+}
+div.content-section h2.entry-title,
+div.content-section h2.entry-title a,
+div.content-section h2.entry-title2,
+div.content-section h2.entry-title2 a {
+  text-decoration: none;
+  color: #203647;
+  margin-left: 0em;
+  margin-top: 2em;
+  margin-bottom: 0em;
+  font-family: 'Passion One', sans-serif;
+  font-size: 1.2em;
+  line-height: 1em;
+  border-bottom: none;
+}
+div.content-section h2.entry-title2 {
+  border-bottom: 1px #999999 solid;
+  width: 100%;
+}
+div.content-section h2.entry-title a:visited,
+div.content-section h2.entry-title2 a:visited {
+  color: #203647;
+}
+div.content-section h2.entry-title a:hover,
+div.content-section h2.entry-title2 a:hover {
+  color: #203647;
+  text-decoration: underline;
+}
+div.content-section p.entry-author,
+div.content-section p.cover-artist {
+  margin-top: 0em;
+  margin-bottom: 0em;
+  font-size: 0.9em;
+  font-weight: 500;
+  font-family: 'Oswald', 'Passion One', Georgia, 'Times New Roman', Times, serif;
+  color: #5e7a8a;
+  margin-bottom: 0em;
+  line-height: 1.2em;
+}
+
+div.content-section p.entry-location,
+div.content-section p.cover-location {
+  margin-top: 0.1em;
+  margin-bottom: 0em;
+  padding-bottom: 0.2em;
+  font-size: 0.9em;
+  font-weight: 500;
+  font-family: 'Oswald', 'Passion One', Georgia, 'Times New Roman', Times, serif;
+  color: #203647;
+  line-height: 1.2em;
+  text-transform: uppercase;
+  border-bottom: 1px #999999 solid;
+  width: 100%;
+}
+div.content-section p.cover-location {
+  text-align: center;
+  margin-top: 0.2em;
+  font-size: 0.8em;
+  margin-bottom: 2em;
+  border-bottom: none;
+}
+div.content-section p.cover-title,
+div.content-section p.cover-title a,
+div.content-section p.cover-title a:visited {
+  color: #203647;
+  font-family: 'Passion One', sans-serif;
+  margin-top: 0em;
+  margin-bottom: 0em;
+  font-size: 1.3em;
+  line-height: 1.1em;
+  text-align: center;
+  text-decoration: none;
+}
+div.content-section p.cover-title a:hover {
+  color: #203647;
+  text-decoration: underline;
+}
+div.content-section p.cover-artist {
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+
+div.cover-column0 {
+  float: left;
+  width: 290px;
+  margin: 15px 10px 15px 0px;
+  text-align: center;
+}
+div.cover-column1 {
+  float: left;
+  width: 290px;
+  margin: 15px 0px 15px 10px;
+  text-align: center;
+}
+
+div.content-section p.staff-name {
+  font-family: 'Passion One', sans-serif;
+  font-size: 1.3em;
+  margin-top: 0em;
+  margin-bottom: 0em;
+}
+div.content-section p.staff-text {
+  margin-top: 0em;
+  margin-bottom: 0em;
+}
+
+div.content-section div.staff-image {
+  width: 190px;
+  float: left;
+  margin-top: 1em;
+  margin-bottom: 0em;
+}
+div.content-section div.staff-former {
+  width: 50%;
+  float: left;
+  margin-top: 1em;
+}
+div.content-section div.staff-info {
+  float: left;
+  margin-top: 1em;
+  padding-top: 0em;
+}
+div.content-section div.staff-info div.staff-column {
+  float: left;
+  width: 50%;
+  margin-top: 0em;
+}
+
+div.content-section p.staff-title {
+  margin-top: 0em;
+  margin-bottom: 0em;
+}
+
+div.content-section div.three-col-container {
+  border: dotted #cccccc thin;
+  background-color: #eeeeee;
+  width: 100%;
+}
+div.content-section div.three-col-1 {
+  width: 33%;
+  float: left;
+  border-right: dotted #cccccc thin;
+  background-color: #eeeeee;
+}
+div.content-section div.three-col-2 {
+  width: 33%;
+  float: left;
+  background-color: #eeeeee;
+}
+div.content-section div.three-col-3 {
+  width: 33%;
+  float: left;
+  border-left: dotted #cccccc thin;
+  background-color: #eeeeee;
+}
+
+div.content-section p.book-name {
+  font-size: 1.1em;
+  font-family: 'Oswald', 'Passion One', Georgia, 'Times New Roman', Times, serif;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+div.content-section p.two-line-above,
+div.content-section p.line-above2 {
+  margin-top: 2em;
+}
+div.content-section p.four-line-above {
+  margin-top: 4em;
+}
+div.content-section p.noindent0 {
+  margin-top: 0em;
+  text-indent: 0em;
+}
+div.content-section p.centered2 {
+  text-align: center;
+  margin-top: 2em;
+}
+div.content-section p.no-line-above {
+  margin-top: 0em;
+}
+div.content-section p.line-above {
+  margin-top: 1em;
+}
+div.content-section div.story-text p.half-line-above {
+  margin-top: 0.5em;
+}
+div.content-section p.question {
+  margin-top: 2em;
+  font-weight: bold;
+}
+div.content-section span.smallcap {
+  font-variant: small-caps;
+}
+div.content-section span.blacked-out {
+  background-color: #000000;
+}
+div.content-section p.smaller {
+  font-size: 0.9em;
+}
+div.content-section p.footnote {
+  margin-top: 0em;
+  margin-bottom: 0em;
+  font-size: 0.8em;
+}
+div.content-section p.centered-nla {
+  text-align: center;
+  margin-top: 0em;
+}
+div.content-section p.centered-nlb {
+  text-align: center;
+  margin-bottom: 0em;
+}
+div.content-section p.centered-nlab,
+p.centered-nlab {
+  text-align: center;
+  margin-top: 0em;
+  margin-bottom: 0em;
+}
+div.content-section p.nla {
+  margin-top: 0em;
+}
+div.content-section p.nlb {
+  margin-bottom: 0em;
+}
+div.content-section p.nlab {
+  margin-top: 0em;
+  margin-bottom: 0em;
+}
+div.content-section p.changeface,
+div.content-section li.changeface {
+  font-family: 'Times New Roman', Times, serif, Monospace;
+  font-size: 1.1em;
+}
+div.content-section span.su-tooltip {
+  border-bottom: dotted #666666 1px;
+}
+div.content-section span.bold {
+  font-weight: bold;
+}
+div.content-section span.italic {
+  font-style: italic;
+}
+div.content-section div.story-text a {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  -ms-word-break: break-all;
+}
+
+div.content-section div.box {
+  border: 1px solid #000;
+  background: #ccc;
+  padding: 1em;
+}
+
+.wp-caption {
+  margin-bottom: 1.5em;
+  max-width: 100%;
+}
+
+.wp-caption img[class*='wp-image-'] {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.wp-caption .wp-caption-text {
+  margin: 0.8075em 0;
+}
+
+.wp-caption-text {
+  text-align: center;
+}
+
+span.smallcap {
+  font-variant: small-caps;
+}
+span.blacked-out {
+  background-color: #000000;
+}
+span.linkcolor {
+  color: #0000ee;
+}
+span.commentcolor {
+  color: #006699;
+}
+span.black {
+  color: #000000;
+}
+
+.alignleft {
+  float: left;
+  margin-right: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+.alignright {
+  float: right;
+  margin-left: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+.aligncenter {
+  clear: both;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 1.5em;
+}
+
+p.center,
+p.centered {
+  text-align: center;
+}
+p.smaller {
+  font-size: 0.9em;
+}
+p.reprinted {
+  text-align: center;
+  font-size: 0.9em;
+}
+p.size-9 {
+  font-size: 0.9em;
+}
+
+table.nolines {
+  width: 85%;
+  border: none;
+  margin: 0 auto;
+}
+td.left-td {
+  width: 50%;
+}
+td.right-td {
+  width: 50%;
+}
