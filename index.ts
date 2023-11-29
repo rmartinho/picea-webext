@@ -207,6 +207,7 @@ async function downloadCover(issue: Issue): Promise<Blob> {
   if (!src) throw new Error('missing cover image')
 
   issue.cover = await downloadImage(src)
+  issue.coverUrl = src
   return issue.cover
 }
 
@@ -310,9 +311,12 @@ async function makeEpub(issue: Issue) {
     properties: 'cover-image',
   })
 
-  const coverTmpl = await getTextResource('resources/cover.xhtml.ejs')
-  const coverHtml = ejs.render(coverTmpl, { coverImage })
-  const coverPage = 'cover.xhtml'
+  const coverTmpl = await getTextResource('resources/titlepage.xhtml.ejs')
+  const coverHtml = ejs.render(coverTmpl, {
+    coverImage,
+    ...(await getImageDimensions(issue.coverUrl)),
+  })
+  const coverPage = 'titlepage.xhtml'
   zip.file(coverPage, coverHtml)
   const coverId = 'cover'
   manifestEntries.push({
@@ -414,4 +418,18 @@ async function getTextResource(resource: string): Promise<string> {
 }
 async function getBlobResource(resource: string): Promise<Blob> {
   return await (await fetch(chrome.runtime.getURL(resource))).blob()
+}
+async function getImageDimensions(url: string) {
+  return await new Promise<{ width: number; height: number }>(
+    (resolve, reject) => {
+      const img = new Image()
+      img.onload = () =>
+        resolve({ width: img.naturalWidth, height: img.naturalHeight })
+      img.onerror = e => {
+        console.log('image bad', e)
+        reject(e)
+      }
+      img.src = new URL(url, document.location.href).href
+    }
+  )
 }
