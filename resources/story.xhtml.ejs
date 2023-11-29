@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= story.title %></title>
+    <link href="<%= stylefile %>" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <div class="content-section">
+      <h1 class="story-title balance-text wp-dark-mode-ignore">
+        <%= story.title %>
+      </h1>
+      <p class="story-author balance-text">
+        <span class="byl">by</span>
+        <span class="authorname"><%= story.author %></span>
+      </p>
+      <div class="story-text"><%- story.text %></div>
+    </div>
+  </body>
+</html>

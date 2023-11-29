@@ -1,5 +1,6 @@
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
+import ejs from 'ejs'
 
 type Issue = {
   number: number
@@ -268,172 +269,135 @@ async function makeEpub(issue: Issue) {
 
   zip.file('mimetype', 'application/epub+zip')
 
-  const container =
-    '<?xml version="1.0"?>' +
-    '<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">' +
-    '  <rootfiles>' +
-    '    <rootfile full-path="content.opf" media-type="application/oebps-package+xml" />' +
-    '  </rootfiles>' +
-    '</container>'
+  const metadataFile = 'content.opf'
+  const containerTmpl = await getTextResource('resources/container.xml.ejs')
+  const container = ejs.render(containerTmpl, { metadataFile })
   zip.file('META-INF/container.xml', container)
 
-  var manifestEntries = ''
-  var spineEntries = ''
-  var navEntries = ''
-  var tocEntries = ''
+  var manifestEntries: {
+    href: string
+    id: string
+    type: string
+    properties?: string
+  }[] = []
+  var spineEntries: string[] = []
+  var navEntries: {
+    href: string
+    text: string
+  }[] = []
+  var tocEntries: {
+    title: string
+    stories: (Story & {
+      href: string
+    })[]
+  }[] = []
 
-  const stylesheet = await (
-    await fetch(chrome.runtime.getURL('resources/stylesheet.css'))
-  ).text()
-  const stylefile = 'stylesheet.css'
-  zip.file(stylefile, stylesheet)
-  manifestEntries += `<item href="${stylefile}" id="css" media-type="text/css"/>`
-  const sepImage = await (
-    await fetch(chrome.runtime.getURL('resources/sep.png'))
-  ).blob()
+  const stylesheet = await getTextResource('resources/stylesheet.css')
+  const styleFile = 'stylesheet.css'
+  zip.file(styleFile, stylesheet)
+  manifestEntries.push({ id: 'stylesheet', href: styleFile, type: 'text/css' })
+
+  const sepImage = await getBlobResource('resources/sep.png')
   zip.file('sep.png', await sepImage.arrayBuffer(), { binary: true })
-  manifestEntries += `<item href="sep.png" id="sepimg" media-type="image/png"/>`
+  manifestEntries.push({ id: 'sep', href: 'sep.png', type: 'image/png' })
 
-  const coverfile = 'cover.jpg'
-  zip.file(coverfile, await issue.cover.arrayBuffer(), { binary: true })
-  manifestEntries +=
-    '<item id="cover" href="cover.jpg" media-type="image/jpeg" properties="cover-image"/>'
-  const titlepage =
-    '<?xml version="1.0" encoding="utf-8"?>' +
-    '<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">' +
-    '  <head>' +
-    '    <meta name="calibre:cover" content="true"/>' +
-    '    <title>Cover</title>' +
-    '    <style type="text/css" title="override_css">' +
-    '      @page { padding: 0pt; margin: 0pt; }' +
-    '      body { text-align: center; padding: 0pt; margin: 0pt; }' +
-    '    </style>' +
-    '  </head>' +
-    '  <body>' +
-    `    <img src="${coverfile}" />` +
-    '  </body>' +
-    '</html>'
-  zip.file('titlepage.xhtml', titlepage)
-  manifestEntries +=
-    '<item id="titlepage" href="titlepage.xhtml" media-type="application/xhtml+xml" properties="calibre:title-page"/>'
-  spineEntries += '<itemref idref="titlepage"/>'
-  manifestEntries +=
-    '<item id="toc" href="toc.xhtml" media-type="application/xhtml+xml" />'
-  spineEntries += '<itemref idref="toc"/>'
+  const coverImage = 'cover.jpg'
+  zip.file(coverImage, await issue.cover.arrayBuffer(), { binary: true })
+  manifestEntries.push({
+    id: 'cover-image',
+    href: coverImage,
+    type: 'image/jpeg',
+    properties: 'cover-image',
+  })
+
+  const coverTmpl = await getTextResource('resources/cover.xhtml.ejs')
+  const coverHtml = ejs.render(coverTmpl, { coverImage })
+  const coverPage = 'cover.xhtml'
+  zip.file(coverPage, coverHtml)
+  const coverId = 'cover'
+  manifestEntries.push({
+    id: coverId,
+    href: coverPage,
+    type: 'application/xhtml+xml',
+    properties: 'calibre:title-page',
+  })
+  spineEntries.push(coverId)
+
+  const tocPage = 'toc.xhtml'
+  const tocId = 'toc'
+  manifestEntries.push({
+    id: tocId,
+    href: tocPage,
+    type: 'application/xhtml+xml',
+  })
+  spineEntries.push(tocId)
 
   var i = 0
   for (const blob of issue.images) {
-    const imagefile = `image-${i}.jpg` // TODO file extension
-    zip.file(imagefile, await blob.arrayBuffer(), { binary: true })
-    manifestEntries += `<item id="image-${i}" href="${imagefile}" media-type="${blob.type}"/>`
+    const imageFile = `image-${i}.jpg` // TODO file extension
+    zip.file(imageFile, await blob.arrayBuffer(), { binary: true })
+    manifestEntries.push({
+      id: `image-${i}`,
+      href: imageFile,
+      type: blob.type,
+    })
     i++
   }
 
   var i = 0
   for (const section of issue.sections) {
-    var first = true
-    tocEntries += `<h3>${section.title}</h3>`
+    const tocSectionEntry: (typeof tocEntries)[0] = {
+      title: section.title,
+      stories: [],
+    }
+    tocEntries.push(tocSectionEntry)
     for (const story of section.stories) {
       i++
       const filename = `story-${i}.xhtml`
-      const textHtml =
-        '<!DOCTYPE html>' +
-        '<html lang="en">' +
-        '  <head>' +
-        `    <title>${story.title}</title>` +
-        `    <link href="${stylefile}" rel="stylesheet" type="text/css"/>` +
-        '  </head>' +
-        '  <body>' +
-        '    <div class="content-section">' +
-        `      <h1 class="story-title balance-text wp-dark-mode-ignore">${story.title}</h1>` +
-        `      <p class="story-author balance-text"><span class="byl">by</span> <span class="authorname">${story.author}</span></p>` +
-        '      <div class="story-text">' +
-        `${story.text}` +
-        '      </div>' +
-        '    </div>' +
-        '  </body>' +
-        '</html>'
+      const textTmpl = await getTextResource('resources/story.xhtml.ejs')
+      const textHtml = ejs.render(textTmpl, { stylefile: styleFile, story })
       const textDoc = new DOMParser().parseFromString(textHtml, 'text/html')
       const text = new XMLSerializer().serializeToString(textDoc)
       zip.file(filename, text)
-      manifestEntries += `<item id="story-${i}" href="${filename}" media-type="application/xhtml+xml"/>`
-      spineEntries += `<itemref idref="story-${i}"/>`
-      if (first) {
-        navEntries += `<li><a href="${filename}">${section.title}</a><ol>`
-        first = false
-      }
-      navEntries += `<li><a href="${filename}">${story.title}</a></li>`
-      tocEntries += `<p><a href="${filename}">${story.title} by ${story.author}</a></p>`
+      manifestEntries.push({
+        id: `story-${i}`,
+        href: filename,
+        type: 'application/xhtml+xml',
+      })
+      spineEntries.push(`story-${i}`)
+      navEntries.push({ href: filename, text: story.title })
+      tocSectionEntry.stories.push({ href: filename, ...story })
     }
-    navEntries += '</ol></li>'
   }
 
-  const toc =
-    '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' +
-    '<!DOCTYPE html>' +
-    '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="en" lang="en">' +
-    '  <head>' +
-    '    <title>Table of Contents</title>' +
-    `    <link href="${stylefile}" rel="stylesheet" type="text/css"/>` +
-    '  </head>' +
-    '  <body>' +
-    '    <div class="content-section">' +
-    '      <h1 class="story-title balance-text wp-dark-mode-ignore">Table of Contents</h1>' +
-    '      <div class="story-text">' +
-    `${tocEntries}` +
-    '      </div>' +
-    '    </div>' +
-    '  </body>' +
-    '</html>'
-  zip.file('toc.xhtml', toc)
+  const tocTmpl = await getTextResource('resources/toc.xhtml.ejs')
+  const tocHtml = ejs.render(tocTmpl, { stylefile: styleFile, tocEntries })
+  zip.file(tocPage, tocHtml)
 
-  const nav =
-    '<?xml version="1.0" encoding="utf-8"?>' +
-    '<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="en" xml:lang="en">' +
-    '  <head>' +
-    '    <title>Navigation</title>' +
-    '    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>' +
-    '  </head>' +
-    '  <body>' +
-    '    <nav epub:type="toc">' +
-    '      <ol>' +
-    '        <li><a href="titlepage.xhtml">Cover</a></li>' +
-    '        <li><a href="toc.xhtml">Contents</a></li>' +
-    `${navEntries}` +
-    '      </ol>' +
-    '    </nav>' +
-    '  </body>' +
-    '</html>'
-  zip.file('nav.xhtml', nav)
-  manifestEntries +=
-    '<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>'
+  const navTmpl = await getTextResource('resources/nav.xhtml.ejs')
+  const navHtml = ejs.render(navTmpl, { coverPage, tocPage, navEntries })
+  const navPage = 'nav.xhtml'
+  zip.file(navPage, navHtml)
+  manifestEntries.push({
+    id: 'nav',
+    href: navPage,
+    type: 'application/xhtml+xml',
+    properties: 'nav',
+  })
 
-  const publishDate = new Date(`1 ${issue.month} 00:00:00 GMT+0000`)
-  const metadata =
-    '<?xml version="1.0"?>' +
-    '<package version="3.0" xml:lang="en" xmlns="http://www.idpf.org/2007/opf" unique-identifier="book-id" prefix="calibre: https://calibre-ebook.com">' +
-    '  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">' +
-    `    <dc:identifier id="book-id">urn:uuid:${crypto.randomUUID()}</dc:identifier>` +
-    '    <meta refines="#book-id" property="identifier-type" scheme="xsd:string">uuid</meta>' +
-    `    <dc:title>Clarkesworld #${issue.number} \u2013 ${issue.month}</dc:title>` +
-    '    <dc:language>en</dc:language>' +
-    '    <dc:creator>Neil Clarke</dc:creator>' +
-    `    <dc:date>${toEpubString(publishDate)}</dc:date>` +
-    '    <meta property="belongs-to-collection" id="series-id">Clarkesworld Magazine</meta>' +
-    '    <meta refines="#series-id" property="collection-type">series</meta>' +
-    `    <meta refines="#series-id" property="group-position">${issue.number}</meta>` +
-    `    <meta property="dcterms:modified" scheme="dcterms:W3CDTF">${toEpubString(
-      new Date()
-    )}</meta>` +
-    '  </metadata>' +
-    '  <manifest>' +
-    `${manifestEntries}` +
-    '  </manifest>' +
-    '  <spine>' +
-    `${spineEntries}` +
-    '  </spine>' +
-    '</package>'
-  zip.file('content.opf', metadata)
+  const metadataTmpl = await getTextResource('resources/content.opf.ejs')
+  const metadata = ejs.render(metadataTmpl, {
+    issue,
+    id: crypto.randomUUID(),
+    publishDate: toEpubString(new Date(`1 ${issue.month} 00:00:00 GMT+0000`)),
+    modifyDate: toEpubString(new Date()),
+    manifestEntries,
+    spineEntries,
+    coverPage,
+    tocPage,
+    startPage: 'story-1.xhtml',
+  })
+  zip.file(metadataFile, metadata)
 
   const blob = await zip.generateAsync({ type: 'blob' })
   saveAs(blob, `Clarkesworld #${issue.number} \u2013 ${issue.month}.epub`)
@@ -443,4 +407,11 @@ function toEpubString(date: Date): string {
   const copy = new Date(date)
   copy.setUTCMilliseconds(0)
   return copy.toISOString().replace(/\.000Z$/, 'Z')
+}
+
+async function getTextResource(resource: string): Promise<string> {
+  return await (await fetch(chrome.runtime.getURL(resource))).text()
+}
+async function getBlobResource(resource: string): Promise<Blob> {
+  return await (await fetch(chrome.runtime.getURL(resource))).blob()
 }

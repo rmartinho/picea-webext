@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html>
+<html
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:epub="http://www.idpf.org/2007/ops"
+  xml:lang="en"
+  lang="en"
+>
+  <head>
+    <title>Table of Contents</title>
+    <link href="<%= stylefile %>" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <div class="content-section">
+      <h1 class="story-title balance-text wp-dark-mode-ignore">
+        Table of Contents
+      </h1>
+      <div class="story-text">
+        <% for(const section of tocEntries) { %>
+        <h3><%= section.title %></h3>
+        <% for(const story of section.stories) { %>
+        <p>
+          <a href="<%= story.href %>">
+            <%= story.title %> by <%= story.author %>
+          </a>
+        </p>
+        <% } %>
+        <% } %>
+      </div>
+    </div>
+  </body>
+</html>

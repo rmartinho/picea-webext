@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="en" xml:lang="en">
+  <head>
+    <title>Navigation</title>
+  </head>
+  <body>
+    <nav epub:type="toc">
+      <ol>
+        <li><a href="<%= coverPage %>">Cover</a></li>
+        <li><a href="<%= tocPage %>">Contents</a></li>
+        <% for(const entry of navEntries) { %>
+        <li><a href="<%= entry.href %>"><%= entry.text %></a></li>
+        <% } %>
+      </ol>
+    </nav>
+  </body>
+</html>
