@@ -51,23 +51,27 @@ function markAll() {
   const issues = parsePage(document)
   const button = makeButton('get-all', 'Download all EPUBs')
   button.addEventListener('click', async e => {
-    if (!button.parentElement) return
-    const icon = button.parentElement.appendChild(makeIcon('getting', 'Downloading EPUBs'))
-    button.parentElement.removeChild(button)
+    if (!button.parentNode) return
+    const icon = button.parentNode.appendChild(
+      makeIcon('getting', 'Downloading EPUBs')
+    )
+    button.parentNode.removeChild(button)
     {
       for (const issue of issues) {
         try {
           await downloadIssue(issue)
         } catch (e) {
-          icon.parentElement?.appendChild(makeIcon('error', 'Failed downloading EPUBs'))
-          icon.parentElement?.removeChild(icon)
+          icon.parentNode?.appendChild(
+            makeIcon('error', 'Failed downloading EPUBs')
+          )
+          icon.parentNode?.removeChild(icon)
           throw e
         }
         await timeout(1000)
       }
     }
-    icon.parentElement?.appendChild(button)
-    icon.parentElement?.removeChild(icon)
+    icon.parentNode?.appendChild(button)
+    icon.parentNode?.removeChild(icon)
   })
   document.querySelector('.content-section h1')?.appendChild(button)
 }
@@ -165,8 +169,10 @@ async function downloadIssue(issue: Issue) {
     '.clarkesreader-icon-get-epub'
   )?.parentElement
   if (!button) return
-  const icon = button.parentElement?.appendChild(makeIcon('getting', 'Downloading EPUB'))
-  button.parentElement?.removeChild(button)
+  const icon = button.parentNode?.appendChild(
+    makeIcon('getting', 'Downloading EPUB')
+  )
+  button.parentNode?.removeChild(button)
   {
     try {
       await downloadCover(issue)
@@ -178,16 +184,18 @@ async function downloadIssue(issue: Issue) {
       }
       await makeEpub(issue)
     } catch (e) {
-      icon?.parentElement?.appendChild(makeIcon('error', 'Failed downloading EPUB'))
-      icon?.parentElement?.removeChild(icon)
+      icon?.parentNode?.appendChild(
+        makeIcon('error', 'Failed downloading EPUB')
+      )
+      icon?.parentNode?.removeChild(icon)
       throw e
     }
   }
-  icon?.parentElement?.appendChild(button)
-  icon?.parentElement?.removeChild(icon)
+  icon?.parentNode?.appendChild(button)
+  icon?.parentNode?.removeChild(icon)
   issue.element
     .querySelectorAll('.clarkesreader-icon-get-story')
-    .forEach(el => el.parentElement?.removeChild(el))
+    .forEach(el => el.parentNode?.removeChild(el))
 }
 
 async function downloadCover(issue: Issue): Promise<Blob> {
@@ -216,15 +224,15 @@ async function downloadStory(issue: Issue, story: Story): Promise<string> {
     const award = doc.querySelector('p.award')
     const body = doc.querySelector('.story-text')
     if (!body) throw new Error('missing story body')
-    const aboutStart = body.querySelector('.about')
-    if (aboutStart) {
-      body.querySelectorAll('.about, .about ~ div').forEach(el => {
-        if (el.parentNode) el.parentNode.removeChild(el)
-      })
-    }
+    body
+      .querySelectorAll('.about, .about ~ div')
+      .forEach(el => el.parentNode?.removeChild(el))
+    body
+      .querySelectorAll('.m-a-box-related, .addtoany_share_save_container')
+      .forEach(el => el.parentNode?.removeChild(el))
     body.childNodes.forEach(el => {
       if (el.nodeType == Node.COMMENT_NODE && el.parentNode)
-        el.parentNode.removeChild(el)
+        el.parentNode?.removeChild(el)
     })
     const imgs = body.querySelectorAll('img')
     for (const img of imgs) {
@@ -249,8 +257,8 @@ async function downloadStory(issue: Issue, story: Story): Promise<string> {
     })
     story.text = (award?.outerHTML ?? '') + body.innerHTML
   }
-  icon?.parentElement?.appendChild(makeIcon('get-story', 'Downloaded story'))
-  icon?.parentElement?.removeChild(icon)
+  icon?.parentNode?.appendChild(makeIcon('get-story', 'Downloaded story'))
+  icon?.parentNode?.removeChild(icon)
 
   return story.text
 }
