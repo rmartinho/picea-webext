@@ -311,14 +311,11 @@ div.page-frame {
   display: inline-block;
   text-align: left;
   display: flex;
-  max-width: 1100px;
 }
 div.content-section {
   float: left;
   box-sizing: content-box;
-  max-width: 600px;
-  min-width: 500px;
-  width: 90%;
+  width: 100%;
   margin: 0 auto;
   padding: 0 1em 0 1em;
   line-height: 1.4em;
