@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package version="3.0" xml:lang="en" xmlns="http://www.idpf.org/2007/opf" unique-identifier="book-id" prefix="calibre: https://calibre-ebook.com">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:identifier id="book-id">urn:uuid:<%= id %></dc:identifier>
+    <meta refines="#book-id" property="identifier-type" scheme="xsd:string">uuid</meta>
+    <dc:title><%= issue.title %></dc:title>
+    <dc:language>en</dc:language>
+    <% for(var i = 0; i < issue.authors.length; i++) { %>
+    <dc:creator id="id-<%= i %>"><%= issue.authors[i] %></dc:creator>
+    <% } %>
+    <dc:date><%= publishDate %></dc:date>
+    <meta property="belongs-to-collection" id="series-id">MTG Story</meta>
+    <meta refines="#series-id" property="collection-type">series</meta>
+    <meta property="dcterms:modified" scheme="dcterms:W3CDTF"><%= modifyDate %></meta>
+  </metadata>
+  <manifest>
+    <% for(const entry of manifestEntries) { %>
+    <item href="<%= entry.href %>" id="<%= entry.id %>" media-type="<%= entry.type %>" <% if(entry.properties) { %>properties="<%= entry.properties %>" <% } %>/>
+    <% } %>
+  </manifest>
+  <spine>
+    <% for(const entry of spineEntries) { %>
+    <itemref idref="<%= entry %>"/>
+    <% } %>
+  </spine>
+  <nav epub:type="landmarks" hidden="">
+    <ol>
+      <li><a epub:type="cover" href="<%= coverPage %>">Cover</a></li>
+      <li><a epub:type="toc" href="<%= tocPage %>">Table of Contents</a></li>
+      <li><a epub:type="bodymatter" href="<%= startPage %>">Start of Content</a></li>
+    </ol>
+  </nav>
+</package>

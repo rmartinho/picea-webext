@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html>
+<html
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:epub="http://www.idpf.org/2007/ops"
+  xml:lang="en"
+  lang="en"
+>
+  <head>
+    <title>Table of Contents</title>
+    <link href="<%= stylefile %>" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <div id="article-body" class="css-GxemT css-RIC6U">
+      <div class="css-3oc+G">
+        <article class="css-NkHWc">
+          <header class="css-scrKY">
+            <h1 class="css-om3e2 css-EsYAb">
+              <span>Table of Contents</span>
+            </h1>
+          </header>
+          <div class="article-body css-cvK8p">
+            <% for(const section of tocEntries) { %>
+            <h3><%= section.title %></h3>
+            <% for(const story of section.stories) { %>
+            <p>
+              <a href="<%= story.href %>">
+                <%= story.title %><% if (story.author) { %> by <%= story.author %><% } %>
+              </a>
+            </p>
+            <% } %>
+            <% } %>
+          </div>
+        </article>
+      </div>
+    </div>
+  </body>
+</html>

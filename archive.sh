@@ -1,6 +1,6 @@
 #!/bin/bash
 
 cd dist
-zip -r -FS ../../clarkesreader.zip * --exclude *.map
+zip -r -FS ../../picea.zip *
 cd ..
-zip -r -FS ../clarkesreader.src.zip index.ts manifest.json package.json yarn.lock README icons/ resources/ 
+zip -r -FS ../picea.src.zip *.ts manifest.json package.json yarn.lock README icons/ resources/ 
