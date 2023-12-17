@@ -98,7 +98,10 @@ function markAll() {
 
 function findSelected<T extends Element>(els: T[]): T {
   return els
-    .map(el => ({ el, len: el.classList.length }))
+    .map(el => ({
+      el,
+      len: [...el.classList].filter(c => c.startsWith('css-')).length,
+    }))
     .sort(({ len: a }, { len: b }) => b - a)[0].el
 }
 
@@ -152,15 +155,13 @@ async function downloadStory(issue: Issue, story: Story) {
   const doc = await fetchDocument(story.url)
 
   const author = doc.querySelector('header div div a')?.textContent?.trim()
-  if (!author) throw 'missing author'
-  story.author = author
+  story.author = author ?? 'various'
 
   const body = doc.querySelector('.article-body')
   if (!body) throw new Error('missing story body')
 
   body.querySelectorAll('iframe').forEach(el => el.remove())
-  body.querySelectorAll('figcaption').forEach(el => el.remove())
-  body.querySelectorAll('rteright').forEach(el => el.remove())
+  body.querySelectorAll('.module_inline-promo').forEach(el => el.remove())
   body.childNodes.forEach(el => {
     if (el.nodeType == Node.COMMENT_NODE) el.remove()
   })
