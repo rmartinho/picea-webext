@@ -1,0 +1,10 @@
+<% if(entries.length > 0) { %>
+<ol>
+  <% for(const entry of entries) { %>
+    <li>
+    <a href="<%= entry.href %>"><%= entry.text %></a>
+    <%- include('nav.xhtml.toc.ejs', { entries: entry.children ?? [] }); %>
+  </li>
+  <% } %>
+</ol>
+<% } %>

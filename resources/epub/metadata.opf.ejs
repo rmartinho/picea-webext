@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package version="3.0" xml:lang="en" xmlns="http://www.idpf.org/2007/opf" unique-identifier="book-id" prefix="calibre: https://calibre-ebook.com">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:identifier id="book-id">urn:uuid:<%= id %></dc:identifier>
+    <meta refines="#book-id" property="identifier-type" scheme="xsd:string">uuid</meta>
+    <dc:title><%= title %></dc:title>
+    <dc:language><%= language %></dc:language>
+    <% for(const author of authors) { %>
+    <dc:creator><%= author %></dc:creator>
+    <% } %>
+    <dc:date><%= publishDate %></dc:date>
+    <% if(series) { %>
+    <meta property="belongs-to-collection" id="series-id"><%= series.name %></meta>
+    <meta refines="#series-id" property="collection-type">series</meta>
+    <meta refines="#series-id" property="group-position"><%= series.number %></meta>
+    <% } %>
+    <meta property="dcterms:modified" scheme="dcterms:W3CDTF"><%= modifyDate %></meta>
+  </metadata>
+  <manifest>
+    <% for(const entry of manifest) { %>
+    <item href="<%= entry.href %>" id="<%= entry.id %>" media-type="<%= entry.type %>" <% if(entry.properties) { %>properties="<%= entry.properties.join(' ') %>" <% } %>/>
+    <% } %>
+  </manifest>
+  <spine>
+    <% for(const entry of spine) { %>
+    <itemref idref="<%= entry %>"/>
+    <% } %>
+  </spine>
+</package>

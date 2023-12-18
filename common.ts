@@ -1,3 +1,5 @@
+import ejs from 'ejs'
+
 export function makeButton(iconName: string, title: string): HTMLButtonElement {
   const icon = makeIcon(iconName, title)
   icon.style.removeProperty('vertical-align')
@@ -75,4 +77,33 @@ export function titleCase(str: string): string {
 }
 export function timeout(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+export async function renderXHTMLTemplate(
+  resource: string,
+  options: object
+): Promise<string> {
+  const html = await renderTextTemplate(resource, options)
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  return new XMLSerializer().serializeToString(doc)
+}
+
+export async function renderTextTemplate(
+  resource: string,
+  options: object = {}
+): Promise<string> {
+  const template = await getTextResource(resource)
+  return ejs.render(template, options, {
+    includer: (path: string) => {
+      return { template: includes[path] }
+    },
+  })
+}
+
+const includes: Record<string, string> = {}
+export async function preloadTemplate(
+  name: string,
+  resource: string
+): Promise<void> {
+  includes[name] = await getTextResource(resource)
 }
