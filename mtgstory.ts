@@ -1,22 +1,19 @@
 import { saveAs } from 'file-saver'
-import mime from 'mime-types'
 import { timeout } from './lib/util'
 import {
   fetchImage,
-  fetchImageDimensions,
   fetchDocument,
   fetchTextResource,
 } from './lib/fetch'
 import { renderXHTMLTemplate } from './lib/template'
 import { makeButton, makeIcon, purgeOldElements } from './lib/dom'
-import { Epub, FileHandle } from './lib/epub'
+import { Book } from './lib/book'
 
 type Issue = {
   authors: string[]
   title: string
   coverUrl: string
   cover: Blob
-  coverDimensions?: { height: number; width: number }
   sections: Section[]
   images: Blob[]
 }
@@ -58,7 +55,6 @@ function markAll() {
     issue.sections = sections
     try {
       issue.cover = await fetchImage(issue.coverUrl)
-      issue.coverDimensions = await fetchImageDimensions(issue.coverUrl)
       for (const section of issue.sections) {
         for (const story of section.stories) {
           await downloadStory(issue, story)
@@ -193,67 +189,23 @@ async function makeEpub(issue: Issue) {
     issue.authors = issue.sections[0].stories.map(s => s.author)
   }
 
-  const epub = new Epub()
+  const book = new Book({
+    title: issue.title,
+    language: 'en',
+    authors: issue.authors,
+    publishDate: new Date(), // TODO?
+    cover: issue.cover,
+  })
 
-  const styleFile = await epub.appendFile(
-    {
-      path: 'main.css',
-      contents: await fetchTextResource('resources/mtgstory/stylesheet.css'),
-    },
-    { type: 'text/css' }
+  const styleFile = await book.addStyleSheet(
+    await fetchTextResource('resources/mtgstory/stylesheet.css')
   )
 
-  const coverImageFile = await epub.appendFile(
-    {
-      path: `cover.${mime.extension(issue.cover.type)}`,
-      contents: issue.cover,
-    },
-    { type: issue.cover.type, binary: true, properties: ['cover-image'] }
-  )
-
-  var i = 0
   for (const blob of issue.images) {
-    await epub.appendFile(
-      {
-        path: `image-${i}.${mime.extension(blob.type)}`,
-        contents: blob,
-      },
-      { type: blob.type, binary: true }
-    )
-    i++
+    await book.addImage(blob)
   }
 
-  const coverFile = await epub.appendFile(
-    {
-      path: 'titlepage.xhtml',
-      contents: await renderXHTMLTemplate(
-        'resources/mtgstory/titlepage.xhtml.ejs',
-        {
-          coverImage: coverImageFile.path,
-          ...issue.coverDimensions,
-        }
-      ),
-    },
-    {
-      type: 'application/xhtml+xml',
-      properties: ['calibre:title-page', 'svg'],
-      spine: true,
-    }
-  )
-  epub.nav.addEntry('Cover', coverFile)
-  epub.nav.setLandmark('cover', 'Cover', coverFile)
-
-  const tocFile = await epub.appendFile(
-    {
-      path: 'toc.xhtml',
-    },
-    {
-      type: 'application/xhtml+xml',
-      spine: true,
-    }
-  )
-  epub.nav.addEntry('Table of Contents', tocFile)
-  epub.nav.setLandmark('toc', 'Table of Contents', tocFile)
+  const tocFile = await book.appendToc({ title: 'Table of Contents' })
 
   var tocEntries: {
     title: string
@@ -262,8 +214,6 @@ async function makeEpub(issue: Issue) {
     })[]
   }[] = []
 
-  var i = 0
-  var firstStoryFile: FileHandle | undefined
   for (const section of issue.sections) {
     const tocSectionEntry: (typeof tocEntries)[0] = {
       title: section.title,
@@ -271,27 +221,16 @@ async function makeEpub(issue: Issue) {
     }
     tocEntries.push(tocSectionEntry)
     for (const story of section.stories) {
-      i++
-      const storyFile = await epub.appendFile(
-        {
-          path: `story-${i}.xhtml`,
-          contents: await renderXHTMLTemplate(
-            'resources/mtgstory/story.xhtml.ejs',
-            { stylesheet: styleFile.path, story }
-          ),
-        },
-        {
-          type: 'application/xhtml+xml',
-          spine: true,
-        }
+      const storyFile = await book.appendText(
+        await renderXHTMLTemplate('resources/mtgstory/story.xhtml.ejs', {
+          stylesheet: styleFile.path,
+          story,
+        }),
+        { title: story.title }
       )
-      if (!firstStoryFile) firstStoryFile = storyFile
       tocSectionEntry.stories.push({ href: storyFile.path, ...story })
-      epub.nav.addEntry(story.title, storyFile)
     }
   }
-  if (!firstStoryFile) throw 'no stories found'
-  epub.nav.setLandmark('bodymatter', 'Start of Content', firstStoryFile)
 
   await tocFile.load(
     await renderXHTMLTemplate('resources/mtgstory/toc.xhtml.ejs', {
@@ -300,11 +239,6 @@ async function makeEpub(issue: Issue) {
     })
   )
 
-  const blob = await epub.generate({
-    title: issue.title,
-    language: 'en',
-    authors: issue.authors,
-    publishDate: new Date(), // TODO?
-  })
+  const blob = await book.generate()
   saveAs(blob, `${issue.title}.epub`)
 }

@@ -22,11 +22,18 @@ export class Epub {
     return this.#nav
   }
 
-  async appendFile(
+  appendFile(
+    entry: FileEntry & Required<Pick<FileEntry, 'contents'>>,
+    options: FileOptions
+  ): Promise<FileHandle>
+  appendFile(
     entry: FileEntry & { contents?: never },
     options: FileOptions
   ): Promise<PendingFile>
-  async appendFile(entry: FileEntry, options: FileOptions): Promise<FileHandle>
+  appendFile(
+    entry: FileEntry,
+    options: FileOptions
+  ): Promise<FileHandle | PendingFile>
 
   async appendFile(
     entry: FileEntry,
@@ -127,6 +134,10 @@ export class Nav extends NavLevel {
     this.#entries = children
   }
 
+  isEmpty(): boolean {
+    return this.#entries.length == 0
+  }
+
   setLandmark(type: LandmarkType, text: string, file: FileHandle) {
     this.#landmarks[type] = { text, href: file.path }
   }
@@ -187,9 +198,12 @@ type Landmarks = Partial<Record<LandmarkType, Anchor>>
 type Anchor = { text: string; href: string }
 type LandmarkEntry = Anchor & { type: LandmarkType }
 
-type FileContents = string | Blob | Promise<string | Blob>
+type FileContents = string | Blob
 
-async function normalizeContents(contents: FileContents): Promise<string | ArrayBuffer> { // TODO
+async function normalizeContents(
+  contents: FileContents
+): Promise<string | ArrayBuffer> {
+  // TODO
   const theContents = await Promise.resolve(contents)
   return theContents instanceof Blob
     ? await theContents.arrayBuffer()

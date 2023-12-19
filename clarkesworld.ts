@@ -3,20 +3,17 @@ import mime from 'mime-types'
 import { timeout, titleCase } from './lib/util'
 import {
   fetchImage,
-  fetchImageDimensions,
   fetchDocument,
   fetchBlobResource,
-  fetchTextResource,
 } from './lib/fetch'
-import { renderXHTMLTemplate } from './lib/template'
+import { renderTextTemplate, renderXHTMLTemplate } from './lib/template'
 import { makeButton, makeIcon, purgeOldElements } from './lib/dom'
-import { Epub, FileHandle } from './lib/epub'
+import { Book } from './lib/book'
 
 type Issue = {
   number: number
   month: string
   coverUrl: string
-  coverDimensions?: { height: number; width: number }
   cover: Blob
   sections: Section[]
   images: Blob[]
@@ -167,7 +164,7 @@ async function downloadIssue(issue: Issue) {
         await timeout(100)
       }
     }
-    await makeEpub(issue)
+    await saveIssue(issue)
   } catch (e) {
     icon?.parentNode?.appendChild(makeIcon('error', 'Failed downloading EPUB'))
     icon?.remove()
@@ -187,7 +184,6 @@ async function downloadCover(issue: Issue): Promise<Blob> {
   if (!src) throw new Error('missing cover image')
 
   issue.cover = await fetchImage(src)
-  issue.coverDimensions = await fetchImageDimensions(src)
   issue.coverUrl = src
   return issue.cover
 }
@@ -237,76 +233,31 @@ async function downloadStory(issue: Issue, story: Story): Promise<string> {
   return story.text
 }
 
-async function makeEpub(issue: Issue) {
-  const epub = new Epub()
+async function saveIssue(issue: Issue) {
+  const book = new Book({
+    title: `Clarkesworld #${issue.number} \u2013 ${issue.month}`,
+    language: 'en',
+    authors: ['Neil Clarke'],
+    publishDate: new Date(`1 ${issue.month} 00:00:00 GMT+0000`),
+    series: { name: 'Clarkesworld Magazine', number: issue.number },
+    cover: issue.cover,
+  })
 
-  const styleFile = await epub.appendFile(
-    {
-      path: 'main.css',
-      contents: await fetchTextResource('resources/clarkesworld/main.css'),
-    },
-    { type: 'text/css' }
-  )
-
-  await epub.appendFile(
-    {
-      path: 'sep.png',
-      contents: await fetchBlobResource('resources/clarkesworld/sep.png'),
-    },
-    { type: 'image/png', binary: true }
-  )
-
-  const coverImageFile = await epub.appendFile(
-    {
-      path: `cover.${mime.extension(issue.cover.type)}`,
-      contents: issue.cover,
-    },
-    { type: issue.cover.type, binary: true, properties: ['cover-image'] }
-  )
-
-  var i = 0
   for (const blob of issue.images) {
-    await epub.appendFile(
-      {
-        path: `image-${i}.${mime.extension(blob.type)}`,
-        contents: blob,
-      },
-      { type: blob.type, binary: true }
-    )
-    i++
+    await book.addImage(blob)
   }
 
-  const coverFile = await epub.appendFile(
-    {
-      path: 'titlepage.xhtml',
-      contents: await renderXHTMLTemplate(
-        'resources/clarkesworld/titlepage.xhtml.ejs',
-        {
-          coverImage: coverImageFile.path,
-          ...issue.coverDimensions,
-        }
-      ),
-    },
-    {
-      type: 'application/xhtml+xml',
-      properties: ['calibre:title-page', 'svg'],
-      spine: true,
-    }
+  const sepFile = await book.addImage(
+    await fetchBlobResource('resources/clarkesworld/sep.png')
   )
-  epub.nav.addEntry('Cover', coverFile)
-  epub.nav.setLandmark('cover', 'Cover', coverFile)
 
-  const tocFile = await epub.appendFile(
-    {
-      path: 'toc.xhtml',
-    },
-    {
-      type: 'application/xhtml+xml',
-      spine: true,
-    }
+  const styleFile = await book.addStyleSheet(
+    await renderTextTemplate('resources/clarkesworld/main.css.ejs', {
+      separatorImage: sepFile.path,
+    })
   )
-  epub.nav.addEntry('Table of Contents', tocFile)
-  epub.nav.setLandmark('toc', 'Table of Contents', tocFile)
+
+  const tocFile = await book.appendToc({ title: 'Table of Contents' })
 
   const tocEntries: {
     title: string
@@ -314,9 +265,6 @@ async function makeEpub(issue: Issue) {
       href: string
     })[]
   }[] = []
-
-  var i = 0
-  var firstStoryFile: FileHandle | undefined
   for (const section of issue.sections) {
     const tocSectionEntry: (typeof tocEntries)[0] = {
       title: section.title,
@@ -324,27 +272,16 @@ async function makeEpub(issue: Issue) {
     }
     tocEntries.push(tocSectionEntry)
     for (const story of section.stories) {
-      i++
-      const storyFile = await epub.appendFile(
-        {
-          path: `story-${i}.xhtml`,
-          contents: await renderXHTMLTemplate(
-            'resources/clarkesworld/story.xhtml.ejs',
-            { stylesheet: styleFile.path, story }
-          ),
-        },
-        {
-          type: 'application/xhtml+xml',
-          spine: true,
-        }
+      const storyFile = await book.appendText(
+        await renderXHTMLTemplate('resources/clarkesworld/story.xhtml.ejs', {
+          stylesheet: styleFile.path,
+          story,
+        }),
+        { title: story.title }
       )
-      if (!firstStoryFile) firstStoryFile = storyFile
       tocSectionEntry.stories.push({ href: storyFile.path, ...story })
-      epub.nav.addEntry(story.title, storyFile)
     }
   }
-  if (!firstStoryFile) throw 'no stories found'
-  epub.nav.setLandmark('bodymatter', 'Start of Content', firstStoryFile)
 
   await tocFile.load(
     await renderXHTMLTemplate('resources/clarkesworld/toc.xhtml.ejs', {
@@ -353,12 +290,6 @@ async function makeEpub(issue: Issue) {
     })
   )
 
-  const blob = await epub.generate({
-    title: `Clarkesworld #${issue.number} \u2013 ${issue.month}`,
-    language: 'en',
-    authors: ['Neil Clarke'],
-    publishDate: new Date(`1 ${issue.month} 00:00:00 GMT+0000`),
-    series: { name: 'Clarkesworld Magazine', number: issue.number },
-  })
+  const blob = await book.generate()
   saveAs(blob, `Clarkesworld #${issue.number} \u2013 ${issue.month}.epub`)
 }

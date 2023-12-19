@@ -10,13 +10,26 @@ export async function fetchImage(url: string): Promise<Blob> {
   return (await fetch(urlFor(url, document.location.href))).blob()
 }
 
-export async function fetchImageDimensions(url: string) {
+export async function getImageDimensions(
+  url: string
+): Promise<{ width: number; height: number }>
+export async function getImageDimensions(
+  blob: Blob
+): Promise<{ width: number; height: number }>
+export async function getImageDimensions(image: string | Blob) {
   return await new Promise<{ width: number; height: number }>(
     (resolve, reject) => {
+      const url = image instanceof Blob ? URL.createObjectURL(image) : image
+
       const img = new Image()
-      img.onload = () =>
+      img.onload = () => {
+        if (image instanceof Blob) URL.revokeObjectURL(url)
+
         resolve({ width: img.naturalWidth, height: img.naturalHeight })
+      }
       img.onerror = e => {
+        if (image instanceof Blob) URL.revokeObjectURL(url)
+
         console.log('image bad', e)
         reject(e)
       }
