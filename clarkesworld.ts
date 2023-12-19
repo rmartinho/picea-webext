@@ -1,22 +1,16 @@
-import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import mime from 'mime-types'
+import { timeout, titleCase } from './lib/util'
 import {
-  downloadImage,
+  fetchImage,
+  fetchImageDimensions,
   fetchDocument,
-  getBlobResource,
-  getImageDimensions,
-  getTextResource,
-  makeButton,
-  makeIcon,
-  purgePiceaElements,
-  renderTextTemplate,
-  renderXHTMLTemplate,
-  timeout,
-  titleCase,
-  toEpubString,
-} from './common'
-import { Epub, FileHandle } from './epub'
+  fetchBlobResource,
+  fetchTextResource,
+} from './lib/fetch'
+import { renderXHTMLTemplate } from './lib/template'
+import { makeButton, makeIcon, purgeOldElements } from './lib/dom'
+import { Epub, FileHandle } from './lib/epub'
 
 type Issue = {
   number: number
@@ -45,7 +39,7 @@ type Story = {
 markAll()
 
 function markAll() {
-  purgePiceaElements()
+  purgeOldElements()
 
   const issues = parsePage(document)
   const button = makeButton('get-all', 'Download all EPUBs')
@@ -192,8 +186,8 @@ async function downloadCover(issue: Issue): Promise<Blob> {
   const src = doc.querySelector('.story-text img')?.getAttribute('src')
   if (!src) throw new Error('missing cover image')
 
-  issue.cover = await downloadImage(src)
-  issue.coverDimensions = await getImageDimensions(src)
+  issue.cover = await fetchImage(src)
+  issue.coverDimensions = await fetchImageDimensions(src)
   issue.coverUrl = src
   return issue.cover
 }
@@ -218,7 +212,7 @@ async function downloadStory(issue: Issue, story: Story): Promise<string> {
   for (const img of imgs) {
     const src = img.getAttribute('src')
     if (!src) continue
-    const blob = await downloadImage(src)
+    const blob = await fetchImage(src)
     img.src = `image-${issue.images.length}.${mime.extension(blob.type)}`
     issue.images.push(blob)
   }
@@ -249,7 +243,7 @@ async function makeEpub(issue: Issue) {
   const styleFile = await epub.appendFile(
     {
       path: 'main.css',
-      contents: await getTextResource('resources/clarkesworld/main.css'),
+      contents: await fetchTextResource('resources/clarkesworld/main.css'),
     },
     { type: 'text/css' }
   )
@@ -257,7 +251,7 @@ async function makeEpub(issue: Issue) {
   await epub.appendFile(
     {
       path: 'sep.png',
-      contents: await getBlobResource('resources/clarkesworld/sep.png'),
+      contents: await fetchBlobResource('resources/clarkesworld/sep.png'),
     },
     { type: 'image/png', binary: true }
   )

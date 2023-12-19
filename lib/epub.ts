@@ -1,10 +1,9 @@
 import JSZip from 'jszip'
 import {
-  preloadTemplate,
+  loadPartialTemplate,
   renderTextTemplate,
   renderXHTMLTemplate,
-  toEpubString,
-} from './common'
+} from './template'
 
 export class Epub {
   #manifest: ManifestEntry[] = []
@@ -47,7 +46,7 @@ export class Epub {
       spine: options.spine ?? false,
     })
     if (entry.contents != undefined) {
-      this.#zip.file(entry.path, await loadBlob(entry.contents), {
+      this.#zip.file(entry.path, await normalizeContents(entry.contents), {
         binary: options.binary,
       })
       return handle
@@ -55,8 +54,8 @@ export class Epub {
       const zip = this.#zip
       return {
         ...handle,
-        async load(contents: string | Blob) {
-          zip.file(entry.path, await loadBlob(contents), {
+        async load(contents: FileContents) {
+          zip.file(entry.path, await normalizeContents(contents), {
             binary: options.binary,
           })
         },
@@ -65,7 +64,7 @@ export class Epub {
   }
 
   async generate(meta: Metadata): Promise<Blob> {
-    await preloadTemplate(
+    await loadPartialTemplate(
       'nav.xhtml.toc.ejs',
       'resources/epub/nav.xhtml.toc.ejs'
     )
@@ -86,8 +85,8 @@ export class Epub {
         language: meta.language,
         authors: meta.authors,
         series: meta.series,
-        publishDate: toEpubString(meta.publishDate),
-        modifyDate: toEpubString(new Date()),
+        publishDate: dateToEpub(meta.publishDate),
+        modifyDate: dateToEpub(new Date()),
         manifest: this.#manifest,
         spine: this.#spine,
       }
@@ -108,7 +107,7 @@ export class NavLevel {
   #entry: Required<NavEntry>
 
   constructor(entry: NavEntry) {
-    this.#entry = { children: [], ...entry, }
+    this.#entry = { children: [], ...entry }
   }
 
   addEntry(text: string, file: FileHandle): NavLevel {
@@ -141,7 +140,7 @@ export class Nav extends NavLevel {
 }
 
 export type PendingFile = FileHandle & {
-  load(contents: string | Blob): Promise<void>
+  load(contents: FileContents): Promise<void>
 }
 
 export type FileHandle = {
@@ -160,7 +159,7 @@ export type Metadata = {
 
 export type FileEntry = {
   path: string
-  contents?: string | Blob
+  contents?: FileContents
 }
 
 export type FileOptions = {
@@ -188,10 +187,13 @@ type Landmarks = Partial<Record<LandmarkType, Anchor>>
 type Anchor = { text: string; href: string }
 type LandmarkEntry = Anchor & { type: LandmarkType }
 
-async function loadBlob(
-  contents: string | Blob
-): Promise<string | ArrayBuffer> {
-  return contents instanceof Blob ? await contents.arrayBuffer() : contents
+type FileContents = string | Blob | Promise<string | Blob>
+
+async function normalizeContents(contents: FileContents): Promise<string | ArrayBuffer> { // TODO
+  const theContents = await Promise.resolve(contents)
+  return theContents instanceof Blob
+    ? await theContents.arrayBuffer()
+    : theContents
 }
 
 function buildLandmarkArray(landmarks: Landmarks): LandmarkEntry[] {
@@ -203,4 +205,10 @@ function buildLandmarkArray(landmarks: Landmarks): LandmarkEntry[] {
     }
   }
   return entries
+}
+
+function dateToEpub(date: Date): string {
+  const copy = new Date(date)
+  copy.setUTCMilliseconds(0)
+  return copy.toISOString().replace(/\.000Z$/, 'Z')
 }

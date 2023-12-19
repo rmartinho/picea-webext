@@ -1,23 +1,22 @@
-import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
-import ejs from 'ejs'
+import mime from 'mime-types'
+import { timeout } from './lib/util'
 import {
-  downloadImage,
+  fetchImage,
+  fetchImageDimensions,
   fetchDocument,
-  getImageDimensions,
-  getTextResource,
-  makeButton,
-  makeIcon,
-  purgePiceaElements,
-  timeout,
-  toEpubString,
-} from './common'
+  fetchTextResource,
+} from './lib/fetch'
+import { renderXHTMLTemplate } from './lib/template'
+import { makeButton, makeIcon, purgeOldElements } from './lib/dom'
+import { Epub, FileHandle } from './lib/epub'
 
 type Issue = {
   authors: string[]
   title: string
   coverUrl: string
   cover: Blob
+  coverDimensions?: { height: number; width: number }
   sections: Section[]
   images: Blob[]
 }
@@ -38,7 +37,7 @@ type Story = {
 markAll()
 
 function markAll() {
-  purgePiceaElements()
+  purgeOldElements()
 
   const archive = document.querySelector<HTMLElement>('#story-archive')!
   if (!archive) throw 'missing archive'
@@ -58,7 +57,8 @@ function markAll() {
 
     issue.sections = sections
     try {
-      issue.cover = await downloadImage(issue.coverUrl)
+      issue.cover = await fetchImage(issue.coverUrl)
+      issue.coverDimensions = await fetchImageDimensions(issue.coverUrl)
       for (const section of issue.sections) {
         for (const story of section.stories) {
           await downloadStory(issue, story)
@@ -170,7 +170,7 @@ async function downloadStory(issue: Issue, story: Story) {
     const src = img.getAttribute('src')
     if (!src) continue
     img.src = `image-${issue.images.length}.jpg` // TODO file extension
-    const blob = await downloadImage(src)
+    const blob = await fetchImage(src)
     issue.images.push(blob)
   }
   body.querySelectorAll('a').forEach(a => {
@@ -193,28 +193,68 @@ async function makeEpub(issue: Issue) {
     issue.authors = issue.sections[0].stories.map(s => s.author)
   }
 
-  const zip = new JSZip()
+  const epub = new Epub()
 
-  zip.file('mimetype', 'application/epub+zip')
-
-  const metadataFile = 'content.opf'
-  const containerTmpl = await getTextResource(
-    'resources/mtgstory/container.xml.ejs'
+  const styleFile = await epub.appendFile(
+    {
+      path: 'main.css',
+      contents: await fetchTextResource('resources/mtgstory/stylesheet.css'),
+    },
+    { type: 'text/css' }
   )
-  const container = ejs.render(containerTmpl, { metadataFile })
-  zip.file('META-INF/container.xml', container)
 
-  var manifestEntries: {
-    href: string
-    id: string
-    type: string
-    properties?: string
-  }[] = []
-  var spineEntries: string[] = []
-  var navEntries: {
-    href: string
-    text: string
-  }[] = []
+  const coverImageFile = await epub.appendFile(
+    {
+      path: `cover.${mime.extension(issue.cover.type)}`,
+      contents: issue.cover,
+    },
+    { type: issue.cover.type, binary: true, properties: ['cover-image'] }
+  )
+
+  var i = 0
+  for (const blob of issue.images) {
+    await epub.appendFile(
+      {
+        path: `image-${i}.${mime.extension(blob.type)}`,
+        contents: blob,
+      },
+      { type: blob.type, binary: true }
+    )
+    i++
+  }
+
+  const coverFile = await epub.appendFile(
+    {
+      path: 'titlepage.xhtml',
+      contents: await renderXHTMLTemplate(
+        'resources/mtgstory/titlepage.xhtml.ejs',
+        {
+          coverImage: coverImageFile.path,
+          ...issue.coverDimensions,
+        }
+      ),
+    },
+    {
+      type: 'application/xhtml+xml',
+      properties: ['calibre:title-page', 'svg'],
+      spine: true,
+    }
+  )
+  epub.nav.addEntry('Cover', coverFile)
+  epub.nav.setLandmark('cover', 'Cover', coverFile)
+
+  const tocFile = await epub.appendFile(
+    {
+      path: 'toc.xhtml',
+    },
+    {
+      type: 'application/xhtml+xml',
+      spine: true,
+    }
+  )
+  epub.nav.addEntry('Table of Contents', tocFile)
+  epub.nav.setLandmark('toc', 'Table of Contents', tocFile)
+
   var tocEntries: {
     title: string
     stories: (Story & {
@@ -222,60 +262,8 @@ async function makeEpub(issue: Issue) {
     })[]
   }[] = []
 
-  const stylesheet = await getTextResource('resources/mtgstory/stylesheet.css')
-  const styleFile = 'stylesheet.css'
-  zip.file(styleFile, stylesheet)
-  manifestEntries.push({ id: 'stylesheet', href: styleFile, type: 'text/css' })
-
-  const coverImage = 'cover.jpg'
-  zip.file(coverImage, await issue.cover.arrayBuffer(), { binary: true })
-  manifestEntries.push({
-    id: 'cover-image',
-    href: coverImage,
-    type: 'image/jpeg',
-    properties: 'cover-image',
-  })
-
-  const coverTmpl = await getTextResource(
-    'resources/mtgstory/titlepage.xhtml.ejs'
-  )
-  const coverHtml = ejs.render(coverTmpl, {
-    coverImage,
-    ...(await getImageDimensions(issue.coverUrl)),
-  })
-  const coverPage = 'titlepage.xhtml'
-  zip.file(coverPage, coverHtml)
-  const coverId = 'cover'
-  manifestEntries.push({
-    id: coverId,
-    href: coverPage,
-    type: 'application/xhtml+xml',
-    properties: 'calibre:title-page',
-  })
-  spineEntries.push(coverId)
-
-  const tocPage = 'toc.xhtml'
-  const tocId = 'toc'
-  manifestEntries.push({
-    id: tocId,
-    href: tocPage,
-    type: 'application/xhtml+xml',
-  })
-  spineEntries.push(tocId)
-
   var i = 0
-  for (const blob of issue.images) {
-    const imageFile = `image-${i}.jpg` // TODO file extension
-    zip.file(imageFile, await blob.arrayBuffer(), { binary: true })
-    manifestEntries.push({
-      id: `image-${i}`,
-      href: imageFile,
-      type: blob.type,
-    })
-    i++
-  }
-
-  var i = 0
+  var firstStoryFile: FileHandle | undefined
   for (const section of issue.sections) {
     const tocSectionEntry: (typeof tocEntries)[0] = {
       title: section.title,
@@ -284,56 +272,39 @@ async function makeEpub(issue: Issue) {
     tocEntries.push(tocSectionEntry)
     for (const story of section.stories) {
       i++
-      const filename = `story-${i}.xhtml`
-      const textTmpl = await getTextResource(
-        'resources/mtgstory/story.xhtml.ejs'
+      const storyFile = await epub.appendFile(
+        {
+          path: `story-${i}.xhtml`,
+          contents: await renderXHTMLTemplate(
+            'resources/mtgstory/story.xhtml.ejs',
+            { stylesheet: styleFile.path, story }
+          ),
+        },
+        {
+          type: 'application/xhtml+xml',
+          spine: true,
+        }
       )
-      const textHtml = ejs.render(textTmpl, { stylefile: styleFile, story })
-      const textDoc = new DOMParser().parseFromString(textHtml, 'text/html')
-      const text = new XMLSerializer().serializeToString(textDoc)
-      zip.file(filename, text)
-      manifestEntries.push({
-        id: `story-${i}`,
-        href: filename,
-        type: 'application/xhtml+xml',
-      })
-      spineEntries.push(`story-${i}`)
-      navEntries.push({ href: filename, text: story.title })
-      tocSectionEntry.stories.push({ href: filename, ...story })
+      if (!firstStoryFile) firstStoryFile = storyFile
+      tocSectionEntry.stories.push({ href: storyFile.path, ...story })
+      epub.nav.addEntry(story.title, storyFile)
     }
   }
+  if (!firstStoryFile) throw 'no stories found'
+  epub.nav.setLandmark('bodymatter', 'Start of Content', firstStoryFile)
 
-  const tocTmpl = await getTextResource('resources/mtgstory/toc.xhtml.ejs')
-  const tocHtml = ejs.render(tocTmpl, { stylefile: styleFile, tocEntries })
-  zip.file(tocPage, tocHtml)
-
-  const navTmpl = await getTextResource('resources/mtgstory/nav.xhtml.ejs')
-  const navHtml = ejs.render(navTmpl, { coverPage, tocPage, navEntries })
-  const navPage = 'nav.xhtml'
-  zip.file(navPage, navHtml)
-  manifestEntries.push({
-    id: 'nav',
-    href: navPage,
-    type: 'application/xhtml+xml',
-    properties: 'nav',
-  })
-
-  const metadataTmpl = await getTextResource(
-    'resources/mtgstory/content.opf.ejs'
+  await tocFile.load(
+    await renderXHTMLTemplate('resources/mtgstory/toc.xhtml.ejs', {
+      stylefile: styleFile.path,
+      tocEntries,
+    })
   )
-  const metadata = ejs.render(metadataTmpl, {
-    issue,
-    id: crypto.randomUUID(),
-    publishDate: toEpubString(new Date()),
-    modifyDate: toEpubString(new Date()),
-    manifestEntries,
-    spineEntries,
-    coverPage,
-    tocPage,
-    startPage: 'story-1.xhtml',
-  })
-  zip.file(metadataFile, metadata)
 
-  const blob = await zip.generateAsync({ type: 'blob' })
+  const blob = await epub.generate({
+    title: issue.title,
+    language: 'en',
+    authors: issue.authors,
+    publishDate: new Date(), // TODO?
+  })
   saveAs(blob, `${issue.title}.epub`)
 }
