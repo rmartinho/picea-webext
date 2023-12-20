@@ -15,7 +15,7 @@ export function makeIcon(name: string, title: string): HTMLImageElement {
   icon.classList.add('picea', `picea-icon-${name}`)
   icon.width = icon.height = 20
   icon.title = title
-  icon.src = chrome.runtime.getURL(`resources/${name}.svg`)
+  icon.src = chrome.runtime.getURL(`res/${name}.svg`)
   icon.style.verticalAlign = 'middle'
   return icon
 }

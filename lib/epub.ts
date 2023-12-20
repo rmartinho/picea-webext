@@ -73,7 +73,7 @@ export class Epub {
   async generate(meta: Metadata): Promise<Blob> {
     await loadPartialTemplate(
       'nav.xhtml.toc.ejs',
-      'resources/epub/nav.xhtml.toc.ejs'
+      'res/epub/nav.xhtml.toc.ejs'
     )
     await this.appendFile(
       {
@@ -85,7 +85,7 @@ export class Epub {
 
     const metadataFile = 'metadata.opf'
     const metadata = await renderTextTemplate(
-      'resources/epub/metadata.opf.ejs',
+      'res/epub/metadata.opf.ejs',
       {
         id: crypto.randomUUID(),
         title: meta.title,
@@ -101,7 +101,7 @@ export class Epub {
     this.#zip.file(metadataFile, metadata)
 
     const container = await renderTextTemplate(
-      'resources/epub/container.xml.ejs',
+      'res/epub/container.xml.ejs',
       { metadataFile }
     )
     this.#zip.file('META-INF/container.xml', container)
@@ -143,7 +143,7 @@ export class Nav extends NavLevel {
   }
 
   async render(): Promise<string> {
-    return await renderXHTMLTemplate('resources/epub/nav.xhtml.ejs', {
+    return await renderXHTMLTemplate('res/epub/nav.xhtml.ejs', {
       toc: this.#entries,
       landmarks: buildLandmarkArray(this.#landmarks),
     })

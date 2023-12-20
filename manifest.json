@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Picea",
-  "version": "1.0.6",
+  "version": "1.0.7",
 
   "description": "Downloads website pages as epub files",
 
@@ -14,15 +14,7 @@
     {
       "matches": ["https://clarkesworldmagazine.com/*"],
       "js": ["clarkesworld.js"]
-    },
-    {
-      "matches": ["https://magic.wizards.com/en/story"],
-      "js": ["mtgstory.js"]
     }
   ],
-  "permissions": [
-    "https://media.wizards.com/*",
-    "https://images.ctfassets.net/*"
-  ],
-  "web_accessible_resources": ["resources/*"]
+  "web_accessible_resources": ["res/*"]
 }

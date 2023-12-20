@@ -101,7 +101,7 @@ export class Book {
       {
         path: 'titlepage.xhtml',
         contents: await renderXHTMLTemplate(
-          'resources/epub/titlepage.xhtml.ejs',
+          'res/epub/titlepage.xhtml.ejs',
           { image: coverFile.path, ...(await getImageDimensions(image)) }
         ),
       },

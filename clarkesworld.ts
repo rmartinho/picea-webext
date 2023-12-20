@@ -1,11 +1,7 @@
 import { saveAs } from 'file-saver'
 import mime from 'mime-types'
 import { timeout, titleCase } from './lib/util'
-import {
-  fetchImage,
-  fetchDocument,
-  fetchBlobResource,
-} from './lib/fetch'
+import { fetchImage, fetchDocument, fetchBlobResource } from './lib/fetch'
 import { renderTextTemplate, renderXHTMLTemplate } from './lib/template'
 import { makeButton, makeIcon, purgeOldElements } from './lib/dom'
 import { Book } from './lib/book'
@@ -248,11 +244,11 @@ async function saveIssue(issue: Issue) {
   }
 
   const sepFile = await book.addImage(
-    await fetchBlobResource('resources/clarkesworld/sep.png')
+    await fetchBlobResource('res/clarkesworld/sep.png')
   )
 
   const styleFile = await book.addStyleSheet(
-    await renderTextTemplate('resources/clarkesworld/main.css.ejs', {
+    await renderTextTemplate('res/clarkesworld/main.css.ejs', {
       separatorImage: sepFile.path,
     })
   )
@@ -273,7 +269,7 @@ async function saveIssue(issue: Issue) {
     tocEntries.push(tocSectionEntry)
     for (const story of section.stories) {
       const storyFile = await book.appendText(
-        await renderXHTMLTemplate('resources/clarkesworld/story.xhtml.ejs', {
+        await renderXHTMLTemplate('res/clarkesworld/story.xhtml.ejs', {
           stylesheet: styleFile.path,
           story,
         }),
@@ -284,7 +280,7 @@ async function saveIssue(issue: Issue) {
   }
 
   await tocFile.load(
-    await renderXHTMLTemplate('resources/clarkesworld/toc.xhtml.ejs', {
+    await renderXHTMLTemplate('res/clarkesworld/toc.xhtml.ejs', {
       stylefile: styleFile.path,
       tocEntries,
     })

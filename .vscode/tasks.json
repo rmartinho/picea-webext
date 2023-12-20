@@ -10,7 +10,7 @@
 			},
 			"problemMatcher": [],
 			"label": "npm: build",
-			"detail": "parcel build && cp -r manifest.json icons/ resources/ dist"
+			"detail": "parcel build && cp -r manifest.json icons/ res/ dist"
 		}
 	]
 }

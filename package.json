@@ -14,8 +14,7 @@
     "typescript": "^5.3.2"
   },
   "source": [
-    "clarkesworld.ts",
-    "mtgstory.ts"
+    "clarkesworld.ts"
   ],
   "target": {
     "default": {
@@ -31,6 +30,6 @@
   },
   "scripts": {
     "dev": "parcel watch",
-    "build": "parcel build && cp -r manifest.json icons/ resources/ dist"
+    "build": "parcel build && cp -r manifest.json icons/ res/ dist"
   }
 }
