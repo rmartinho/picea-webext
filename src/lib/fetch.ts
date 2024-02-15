@@ -39,11 +39,11 @@ export async function getImageDimensions(image: string | Blob) {
 }
 
 export async function fetchTextResource(resource: string): Promise<string> {
-  return await (await fetch(chrome.runtime.getURL(resource))).text()
+  return await (await fetch(resource)).text()
 }
 
 export async function fetchBlobResource(resource: string): Promise<Blob> {
-  return await (await fetch(chrome.runtime.getURL(resource))).blob()
+  return await (await fetch(resource)).blob()
 }
 
 function urlFor(path: string, base: string): URL {

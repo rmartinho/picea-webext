@@ -4,6 +4,10 @@ import {
   renderTextTemplate,
   renderXHTMLTemplate,
 } from './template'
+import tocTemplateUrl from 'url:../../res/epub/nav.xhtml.toc.ejs'
+import navTemplateUrl from 'url:../../res/epub/nav.xhtml.ejs'
+import metadataTemplateUrl from 'url:../../res/epub/metadata.opf.ejs'
+import containerTemplateUrl from 'url:../../res/epub/container.xml.ejs'
 
 export class Epub {
   #manifest: ManifestEntry[] = []
@@ -71,10 +75,7 @@ export class Epub {
   }
 
   async generate(meta: Metadata): Promise<Blob> {
-    await loadPartialTemplate(
-      'nav.xhtml.toc.ejs',
-      'res/epub/nav.xhtml.toc.ejs'
-    )
+    await loadPartialTemplate('nav.xhtml.toc.ejs', tocTemplateUrl)
     await this.appendFile(
       {
         path: 'nav.xhtml',
@@ -84,26 +85,22 @@ export class Epub {
     )
 
     const metadataFile = 'metadata.opf'
-    const metadata = await renderTextTemplate(
-      'res/epub/metadata.opf.ejs',
-      {
-        id: crypto.randomUUID(),
-        title: meta.title,
-        language: meta.language,
-        authors: meta.authors,
-        series: meta.series,
-        publishDate: dateToEpub(meta.publishDate),
-        modifyDate: dateToEpub(new Date()),
-        manifest: this.#manifest,
-        spine: this.#spine,
-      }
-    )
+    const metadata = await renderTextTemplate(metadataTemplateUrl, {
+      id: crypto.randomUUID(),
+      title: meta.title,
+      language: meta.language,
+      authors: meta.authors,
+      series: meta.series,
+      publishDate: dateToEpub(meta.publishDate),
+      modifyDate: dateToEpub(new Date()),
+      manifest: this.#manifest,
+      spine: this.#spine,
+    })
     this.#zip.file(metadataFile, metadata)
 
-    const container = await renderTextTemplate(
-      'res/epub/container.xml.ejs',
-      { metadataFile }
-    )
+    const container = await renderTextTemplate(containerTemplateUrl, {
+      metadataFile,
+    })
     this.#zip.file('META-INF/container.xml', container)
 
     return await this.#zip.generateAsync({ type: 'blob' })
@@ -129,7 +126,7 @@ export class Nav extends NavLevel {
   #landmarks: Landmarks = {}
 
   constructor() {
-    const children = []
+    const children = <NavEntry[]>[]
     super({ text: ':root', href: '/', children })
     this.#entries = children
   }
@@ -143,7 +140,7 @@ export class Nav extends NavLevel {
   }
 
   async render(): Promise<string> {
-    return await renderXHTMLTemplate('res/epub/nav.xhtml.ejs', {
+    return await renderXHTMLTemplate(navTemplateUrl, {
       toc: this.#entries,
       landmarks: buildLandmarkArray(this.#landmarks),
     })

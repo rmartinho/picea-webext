@@ -1,0 +1,9 @@
+{
+  "extends": ["@parcel/config-webextension"],
+  "transformers": {
+    "blob:*": ["@parcel/transformer-inline"]
+  },
+  "optimizers": {
+    "blob:*": ["./tools/blob-optimizer.mjs"]
+  }
+}

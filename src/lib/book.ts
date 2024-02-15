@@ -10,6 +10,7 @@ import {
 } from './epub'
 import { renderXHTMLTemplate } from './template'
 import { getImageDimensions } from './fetch'
+import titlepageTemplateUrl from 'url:../../res/epub/titlepage.xhtml.ejs'
 
 export { type FileHandle } from './epub'
 
@@ -100,10 +101,10 @@ export class Book {
     const titleFile = await this.#appendText(
       {
         path: 'titlepage.xhtml',
-        contents: await renderXHTMLTemplate(
-          'res/epub/titlepage.xhtml.ejs',
-          { image: coverFile.path, ...(await getImageDimensions(image)) }
-        ),
+        contents: await renderXHTMLTemplate(titlepageTemplateUrl, {
+          image: coverFile.path,
+          ...(await getImageDimensions(image)),
+        }),
       },
       { title: 'Cover', properties: ['calibre:title-page', 'svg'] }
     )

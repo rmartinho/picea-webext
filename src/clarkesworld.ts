@@ -5,6 +5,10 @@ import { fetchImage, fetchDocument, fetchBlobResource } from './lib/fetch'
 import { renderTextTemplate, renderXHTMLTemplate } from './lib/template'
 import { makeButton, makeIcon, purgeOldElements } from './lib/dom'
 import { Book } from './lib/book'
+import sepImageUrl from 'url:../res/clarkesworld/sep.png'
+import stylesheetTemplateUrl from 'url:../res/clarkesworld/main.css.ejs'
+import storyTemplateUrl from 'url:../res/clarkesworld/story.xhtml.ejs'
+import tocTemplateUrl from 'url:../res/clarkesworld/toc.xhtml.ejs'
 
 type Issue = {
   number: number
@@ -243,12 +247,10 @@ async function saveIssue(issue: Issue) {
     await book.addImage(blob)
   }
 
-  const sepFile = await book.addImage(
-    await fetchBlobResource('res/clarkesworld/sep.png')
-  )
+  const sepFile = await book.addImage(await fetchBlobResource(sepImageUrl))
 
   const styleFile = await book.addStyleSheet(
-    await renderTextTemplate('res/clarkesworld/main.css.ejs', {
+    await renderTextTemplate(stylesheetTemplateUrl, {
       separatorImage: sepFile.path,
     })
   )
@@ -269,7 +271,7 @@ async function saveIssue(issue: Issue) {
     tocEntries.push(tocSectionEntry)
     for (const story of section.stories) {
       const storyFile = await book.appendText(
-        await renderXHTMLTemplate('res/clarkesworld/story.xhtml.ejs', {
+        await renderXHTMLTemplate(storyTemplateUrl, {
           stylesheet: styleFile.path,
           story,
         }),
@@ -280,7 +282,7 @@ async function saveIssue(issue: Issue) {
   }
 
   await tocFile.load(
-    await renderXHTMLTemplate('res/clarkesworld/toc.xhtml.ejs', {
+    await renderXHTMLTemplate(tocTemplateUrl, {
       stylefile: styleFile.path,
       tocEntries,
     })
